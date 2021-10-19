@@ -81,12 +81,9 @@ void loop() {
      - X1 as the most significant byte */ 
     X1=X1<<8;
     X_out =X0+X1;
-    Xa=X_out/256.0;// Xa = output value from -1 to +1, Gravity acceleration acting on the X-Axis
-    
-
-
-    
+    Xa=X_out/256.0;// Xa = output value from -1 to +1, Gravity acceleration acting on the X-Axis    
   }
+
   // Y-Axis
   Wire.beginTransmission(ADXAddress); 
   Wire.write(Y_Axis_Register_DATAY0);
@@ -216,5 +213,4 @@ void loop() {
   start = elapsed = 0;
 
   delay(1000);
-
 }

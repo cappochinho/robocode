@@ -8,18 +8,18 @@ portlist = []
 for onePort in ports:
     portlist.append(str(onePort))
     print(str(onePort))
-
+print(portlist)
 val = input("select port: COM" )
 
 print(val)
 
-for x in range(0, len(portlist)):
-    if portlist[x].startswith("COM" + str(val)):
-        portVar = "COM" + str(val)
-        print(portlist[x])
+# for x in range(0, len(portlist)):
+#     if portlist[x].startswith("COM" + str(val)):
+#         portVar = "COM" + str(val)
+#         print(portlist[x])
 
 serialInst.baudrate = 9600
-serialInst.port = portVar
+serialInst.port = "COM" + str(val)
 serialInst.open()
 
 while True:
