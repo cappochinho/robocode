@@ -1,17 +1,14 @@
 import collections
 import sys
 import time
-from os import name
 
 import pyqtgraph as pg
 import serial
 import serial.tools.list_ports
-from PyQt5 import QtWidgets
 from PyQt5.QtCore import QTimer
-# from PyQt5
-from PyQt5.QtWidgets import (QApplication, QComboBox, QErrorMessage, QHBoxLayout, QLabel,
-                             QPushButton, QVBoxLayout, QWidget)
-from serial.serialutil import SerialException
+from PyQt5.QtWidgets import (QApplication, QComboBox, QErrorMessage,
+                             QHBoxLayout, QLabel, QPushButton, QVBoxLayout,
+                             QWidget)
 
 app = QApplication(sys.argv)
 
@@ -26,7 +23,7 @@ class App(QWidget):
         self.gyr_y = collections.deque(maxlen=10000)
         self.gyr_z = collections.deque(maxlen=10000)
         self.time = collections.deque(maxlen=10000)
-        
+
         hboxlayout = QHBoxLayout()
         vboxlayout = QVBoxLayout()
         hboxlayout.addLayout(vboxlayout)
@@ -70,6 +67,7 @@ class App(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
         self.is_plotting = False
+        self.port = None
 
     def list_comports(self):
         self.ports = serial.tools.list_ports.comports()
@@ -95,18 +93,18 @@ class App(QWidget):
             self.port = ports[0]
 
     def plot_clicked(self):
-        self.plot_button.setDisabled(True)
-        self.stop_button.setDisabled(False)
-        self.graphwidget.getPlotItem().clear()
-        self.acc_x.clear()
-        self.acc_y.clear()
-        self.acc_z.clear()
-        self.gyr_x.clear()
-        self.gyr_y.clear()
-        self.gyr_z.clear()
-        self.time.clear()
-        
         if self.port != None:
+            self.graphwidget.getPlotItem().clear()
+            self.acc_x.clear()
+            self.acc_y.clear()
+            self.acc_z.clear()
+            self.gyr_x.clear()
+            self.gyr_y.clear()
+            self.gyr_z.clear()
+            self.time.clear()
+
+            self.plot_button.setDisabled(True)
+            self.stop_button.setDisabled(False)
             self.arduino_serial = serial.Serial()
             self.arduino_serial.baudrate = 9600
             self.arduino_serial.port = self.port.device
@@ -143,16 +141,22 @@ class App(QWidget):
                 self.acc_x.append(acc[0])
                 self.acc_y.append(acc[1])
                 self.acc_z.append(acc[2])
-                self.graphwidget.getPlotItem().plot().setData(self.time, self.acc_x, name="Acceleration X", pen=x_pen)
-                self.graphwidget.getPlotItem().plot().setData(self.time, self.acc_y, name="Acceleration Y", pen=y_pen)
-                self.graphwidget.getPlotItem().plot().setData(self.time, self.acc_z, name="Acceleration Z", pen=z_pen)
+                self.graphwidget.getPlotItem().plot().setData(
+                    self.time, self.acc_x, name="Acceleration X", pen=x_pen)
+                self.graphwidget.getPlotItem().plot().setData(
+                    self.time, self.acc_y, name="Acceleration Y", pen=y_pen)
+                self.graphwidget.getPlotItem().plot().setData(
+                    self.time, self.acc_z, name="Acceleration Z", pen=z_pen)
             elif self.plot_var == "ang":
                 self.gyr_x.append(gyr[0])
                 self.gyr_y.append(gyr[1])
                 self.gyr_z.append(gyr[2])
-                self.graphwidget.getPlotItem().plot(self.time, self.gyr_x, name="Angular Rate X", pen=x_pen)
-                self.graphwidget.getPlotItem().plot(self.time, self.gyr_y, name="Angular Rate Y", pen=y_pen)
-                self.graphwidget.getPlotItem().plot(self.time, self.gyr_z, name="Angular Rate Z", pen=z_pen)
+                self.graphwidget.getPlotItem().plot(
+                    self.time, self.gyr_x, name="Angular Rate X", pen=x_pen)
+                self.graphwidget.getPlotItem().plot(
+                    self.time, self.gyr_y, name="Angular Rate Y", pen=y_pen)
+                self.graphwidget.getPlotItem().plot(
+                    self.time, self.gyr_z, name="Angular Rate Z", pen=z_pen)
         app.processEvents()
 
     def getdata(self):
