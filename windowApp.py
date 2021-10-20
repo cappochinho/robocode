@@ -92,7 +92,7 @@ class App(QWidget):
             self.port = ports[0]
 
     def plot_clicked(self):
-        self.graphwidget.getPlotItem().plot().clear()
+        self.graphwidget.getPlotItem().clear()
         self.acc_x.clear()
         self.acc_y.clear()
         self.acc_z.clear()
@@ -112,6 +112,7 @@ class App(QWidget):
 
     def stop(self):
         self.timer.stop()
+        self.arduino_serial.close()
         self.is_plotting = False
 
     def update(self):
@@ -129,7 +130,6 @@ class App(QWidget):
                 self.graphwidget.getPlotItem().plot(self.time, self.acc_x, name="Acceleration X", pen=x_pen)
                 self.graphwidget.getPlotItem().plot(self.time, self.acc_y, name="Acceleration Y", pen=y_pen)
                 self.graphwidget.getPlotItem().plot(self.time, self.acc_z, name="Acceleration Z", pen=z_pen)
-                # self.graphwidget.getPlotItem().plot().setData(self.time, self.acc_x)
             elif self.plot_var == "ang":
                 self.gyr_x.append(gyr[0])
                 self.gyr_y.append(gyr[1])
@@ -137,8 +137,6 @@ class App(QWidget):
                 self.graphwidget.getPlotItem().plot(self.time, self.gyr_x, name="Angular Rate X", pen=x_pen)
                 self.graphwidget.getPlotItem().plot(self.time, self.gyr_y, name="Angular Rate Y", pen=y_pen)
                 self.graphwidget.getPlotItem().plot(self.time, self.gyr_z, name="Angular Rate Z", pen=z_pen)
-
-            # app.processEvents()
 
     def getdata(self):
         packet = self.arduino_serial.readline()
