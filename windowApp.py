@@ -1,15 +1,17 @@
 import collections
-from os import name
 import sys
 import time
+from os import name
 
 import pyqtgraph as pg
 import serial
 import serial.tools.list_ports
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import QTimer
 # from PyQt5
-from PyQt5.QtWidgets import (QApplication, QComboBox, QHBoxLayout, QLabel,
+from PyQt5.QtWidgets import (QApplication, QComboBox, QErrorMessage, QHBoxLayout, QLabel,
                              QPushButton, QVBoxLayout, QWidget)
+from serial.serialutil import SerialException
 
 app = QApplication(sys.argv)
 
@@ -57,6 +59,7 @@ class App(QWidget):
 
         self.stop_button = QPushButton("Stop")
         self.stop_button.clicked.connect(self.stop)
+        self.stop_button.setDisabled(True)
         vboxlayout.addWidget(self.stop_button)
 
         vboxlayout.addStretch(1)
@@ -92,6 +95,8 @@ class App(QWidget):
             self.port = ports[0]
 
     def plot_clicked(self):
+        self.plot_button.setDisabled(True)
+        self.stop_button.setDisabled(False)
         self.graphwidget.getPlotItem().clear()
         self.acc_x.clear()
         self.acc_y.clear()
@@ -105,15 +110,26 @@ class App(QWidget):
             self.arduino_serial = serial.Serial()
             self.arduino_serial.baudrate = 9600
             self.arduino_serial.port = self.port.device
-            self.arduino_serial.open()
             self.start_time = time.time()
-            self.timer.start(1)
-            self.is_plotting = True
+
+            try:
+                self.arduino_serial.open()
+                self.timer.start(1)
+                self.is_plotting = True
+            except Exception as e:
+                self.plot_button.setDisabled(False)
+                self.stop_button.setDisabled(True)
+                error_message = QErrorMessage()
+                error_message.setWindowTitle("Port error")
+                error_message.showMessage("Serial Port is already open")
+                error_message.exec_()
 
     def stop(self):
         self.timer.stop()
         self.arduino_serial.close()
         self.is_plotting = False
+        self.plot_button.setDisabled(False)
+        self.stop_button.setDisabled(True)
 
     def update(self):
         if self.arduino_serial.in_waiting:
@@ -127,9 +143,9 @@ class App(QWidget):
                 self.acc_x.append(acc[0])
                 self.acc_y.append(acc[1])
                 self.acc_z.append(acc[2])
-                self.graphwidget.getPlotItem().plot(self.time, self.acc_x, name="Acceleration X", pen=x_pen)
-                self.graphwidget.getPlotItem().plot(self.time, self.acc_y, name="Acceleration Y", pen=y_pen)
-                self.graphwidget.getPlotItem().plot(self.time, self.acc_z, name="Acceleration Z", pen=z_pen)
+                self.graphwidget.getPlotItem().plot().setData(self.time, self.acc_x, name="Acceleration X", pen=x_pen)
+                self.graphwidget.getPlotItem().plot().setData(self.time, self.acc_y, name="Acceleration Y", pen=y_pen)
+                self.graphwidget.getPlotItem().plot().setData(self.time, self.acc_z, name="Acceleration Z", pen=z_pen)
             elif self.plot_var == "ang":
                 self.gyr_x.append(gyr[0])
                 self.gyr_y.append(gyr[1])
@@ -137,14 +153,18 @@ class App(QWidget):
                 self.graphwidget.getPlotItem().plot(self.time, self.gyr_x, name="Angular Rate X", pen=x_pen)
                 self.graphwidget.getPlotItem().plot(self.time, self.gyr_y, name="Angular Rate Y", pen=y_pen)
                 self.graphwidget.getPlotItem().plot(self.time, self.gyr_z, name="Angular Rate Z", pen=z_pen)
+        app.processEvents()
 
     def getdata(self):
         packet = self.arduino_serial.readline()
         val = packet.decode('utf-8')
+        if val.startswith("Ooops"):
+            raise Exception()
         val = val.split(',')
         val = [float(val.strip()) for val in val]
         acc = val[0:3]
         gyr = val[3:]
+        app.processEvents()
         return acc, gyr
 
 
