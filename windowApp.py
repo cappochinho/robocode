@@ -1,5 +1,7 @@
 import collections
+from os import name
 import sys
+import time
 
 import pyqtgraph as pg
 import serial
@@ -21,6 +23,8 @@ class App(QWidget):
         self.gyr_x = collections.deque(maxlen=10000)
         self.gyr_y = collections.deque(maxlen=10000)
         self.gyr_z = collections.deque(maxlen=10000)
+        self.time = collections.deque(maxlen=10000)
+        
         hboxlayout = QHBoxLayout()
         vboxlayout = QVBoxLayout()
         hboxlayout.addLayout(vboxlayout)
@@ -35,6 +39,7 @@ class App(QWidget):
         vboxlayout.addWidget(QLabel("Select data to plot"))
 
         self.graphwidget = pg.PlotWidget()
+        # self.graphwidget.getPlotItem().plot(title="Real Time of Accelerometer and Gyroscope data")
         self.graphwidget.getPlotItem().setLabel("bottom", "Time", units="s")
         self.graphwidget.getPlotItem().setLabel("left", "Acceleration", units="m/s²")
         hboxlayout.addWidget(self.graphwidget)
@@ -44,6 +49,7 @@ class App(QWidget):
         self.plot_data.addItem("Angular Rates")
         self.plot_data.currentTextChanged.connect(self.plot_data_changed)
         vboxlayout.addWidget(self.plot_data)
+        self.plot_var = "acc"
 
         self.plot_button = QPushButton("Start Plot")
         self.plot_button.clicked.connect(self.plot_clicked)
@@ -60,7 +66,7 @@ class App(QWidget):
         # QTimer
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
-        # self.timer.start(1)
+        self.is_plotting = False
 
     def list_comports(self):
         self.ports = serial.tools.list_ports.comports()
@@ -69,11 +75,13 @@ class App(QWidget):
 
     def plot_data_changed(self):
         currentText = self.plot_data.currentText()
-        if currentText.lower() == "Angular Rates".lower():
-            self.graphwidget.getPlotItem().setLabel("left", "Angular Rates", units="rad/s")
-        elif currentText.lower() == "acceleration".lower():
-            # self.graphwidget.setLabel("bottom", "Time", units="s")
-            self.graphwidget.getPlotItem().setLabel("left", "Acceleration", units="m/s²")
+        if not self.is_plotting:
+            if currentText.lower() == "Angular Rates".lower():
+                self.graphwidget.getPlotItem().setLabel("left", "Angular Rates", units="rad/s")
+                self.plot_var = "ang"
+            elif currentText.lower() == "acceleration".lower():
+                self.graphwidget.getPlotItem().setLabel("left", "Acceleration", units="m/s²")
+                self.plot_var = "acc"
 
     def comport_changed(self):
         ports = list(filter(lambda port: port.description ==
@@ -84,30 +92,53 @@ class App(QWidget):
             self.port = ports[0]
 
     def plot_clicked(self):
+        self.graphwidget.getPlotItem().plot().clear()
+        self.acc_x.clear()
+        self.acc_y.clear()
+        self.acc_z.clear()
+        self.gyr_x.clear()
+        self.gyr_y.clear()
+        self.gyr_z.clear()
+        self.time.clear()
+        
         if self.port != None:
             self.arduino_serial = serial.Serial()
             self.arduino_serial.baudrate = 9600
             self.arduino_serial.port = self.port.device
             self.arduino_serial.open()
-            self.timer.start()
+            self.start_time = time.time()
+            self.timer.start(1)
+            self.is_plotting = True
 
     def stop(self):
         self.timer.stop()
+        self.is_plotting = False
 
     def update(self):
         if self.arduino_serial.in_waiting:
-            
             acc, gyr = self.getdata()
-            self.acc_x.append(acc[0])
-            self.acc_y.append(acc[1])
-            self.acc_z.append(acc[2])
-            self.gyr_x.append(gyr[0])
-            self.gyr_y.append(gyr[1])
-            self.gyr_z.append(acc[2])
+            self.time.append(time.time() - self.start_time)
+            x_pen = pg.mkPen({'color': "#F00"})
+            y_pen = pg.mkPen({'color': "#0F0"})
+            z_pen = pg.mkPen({'color': "#00F"})
 
-            # self.y[:] = self.acc_x
-            self.graphwidget.getPlotItem.setData(self.x, [self.acc_x])
-            self.app.processEvents()
+            if self.plot_var == "acc":
+                self.acc_x.append(acc[0])
+                self.acc_y.append(acc[1])
+                self.acc_z.append(acc[2])
+                self.graphwidget.getPlotItem().plot(self.time, self.acc_x, name="Acceleration X", pen=x_pen)
+                self.graphwidget.getPlotItem().plot(self.time, self.acc_y, name="Acceleration Y", pen=y_pen)
+                self.graphwidget.getPlotItem().plot(self.time, self.acc_z, name="Acceleration Z", pen=z_pen)
+                # self.graphwidget.getPlotItem().plot().setData(self.time, self.acc_x)
+            elif self.plot_var == "ang":
+                self.gyr_x.append(gyr[0])
+                self.gyr_y.append(gyr[1])
+                self.gyr_z.append(gyr[2])
+                self.graphwidget.getPlotItem().plot(self.time, self.gyr_x, name="Angular Rate X", pen=x_pen)
+                self.graphwidget.getPlotItem().plot(self.time, self.gyr_y, name="Angular Rate Y", pen=y_pen)
+                self.graphwidget.getPlotItem().plot(self.time, self.gyr_z, name="Angular Rate Z", pen=z_pen)
+
+            # app.processEvents()
 
     def getdata(self):
         packet = self.arduino_serial.readline()
