@@ -9,6 +9,7 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import (QApplication, QComboBox, QErrorMessage,
                              QHBoxLayout, QLabel, QPushButton, QVBoxLayout,
                              QWidget)
+from serial.serialutil import SerialException
 
 app = QApplication(sys.argv)
 
@@ -67,7 +68,7 @@ class App(QWidget):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
         self.is_plotting = False
-        self.port = None
+        # self.port = None
 
     def list_comports(self):
         self.ports = serial.tools.list_ports.comports()
@@ -114,7 +115,7 @@ class App(QWidget):
                 self.arduino_serial.open()
                 self.timer.start(1)
                 self.is_plotting = True
-            except Exception as e:
+            except SerialException as e:
                 self.plot_button.setDisabled(False)
                 self.stop_button.setDisabled(True)
                 error_message = QErrorMessage()
@@ -131,37 +132,44 @@ class App(QWidget):
 
     def update(self):
         if self.arduino_serial.in_waiting:
-            acc, gyr = self.getdata()
-            self.time.append(time.time() - self.start_time)
-            x_pen = pg.mkPen({'color': "#F00"})
-            y_pen = pg.mkPen({'color': "#0F0"})
-            z_pen = pg.mkPen({'color': "#00F"})
+            try:
+                acc, gyr = self.getdata()
+                self.time.append(time.time() - self.start_time)
+                x_pen = pg.mkPen({'color': "#F00"})
+                y_pen = pg.mkPen({'color': "#0F0"})
+                z_pen = pg.mkPen({'color': "#00F"})
 
-            if self.plot_var == "acc":
-                self.acc_x.append(acc[0])
-                self.acc_y.append(acc[1])
-                self.acc_z.append(acc[2])
-                self.graphwidget.getPlotItem().plot().setData(
-                    self.time, self.acc_x, name="Acceleration X", pen=x_pen)
-                self.graphwidget.getPlotItem().plot().setData(
-                    self.time, self.acc_y, name="Acceleration Y", pen=y_pen)
-                self.graphwidget.getPlotItem().plot().setData(
-                    self.time, self.acc_z, name="Acceleration Z", pen=z_pen)
-            elif self.plot_var == "ang":
-                self.gyr_x.append(gyr[0])
-                self.gyr_y.append(gyr[1])
-                self.gyr_z.append(gyr[2])
-                self.graphwidget.getPlotItem().plot(
-                    self.time, self.gyr_x, name="Angular Rate X", pen=x_pen)
-                self.graphwidget.getPlotItem().plot(
-                    self.time, self.gyr_y, name="Angular Rate Y", pen=y_pen)
-                self.graphwidget.getPlotItem().plot(
-                    self.time, self.gyr_z, name="Angular Rate Z", pen=z_pen)
+                if self.plot_var == "acc":
+                    self.acc_x.append(acc[0])
+                    self.acc_y.append(acc[1])
+                    self.acc_z.append(acc[2])
+                    print(
+                        f"Time: {len(self.time)}, Acc_x: {len(self.acc_x)}, Acc_y: {len(self.acc_y)}, Acc_z: {len(self.acc_z)}")
+                    self.graphwidget.getPlotItem().plot().setData(
+                        self.time, self.acc_x, name="Acceleration X", pen=x_pen)
+                    self.graphwidget.getPlotItem().plot().setData(
+                        self.time, self.acc_y, name="Acceleration Y", pen=y_pen)
+                    self.graphwidget.getPlotItem().plot().setData(
+                        self.time, self.acc_z, name="Acceleration Z", pen=z_pen)
+                elif self.plot_var == "ang":
+                    self.gyr_x.append(gyr[0])
+                    self.gyr_y.append(gyr[1])
+                    self.gyr_z.append(gyr[2])
+                    self.graphwidget.getPlotItem().plot(
+                        self.time, self.gyr_x, name="Angular Rate X", pen=x_pen)
+                    self.graphwidget.getPlotItem().plot(
+                        self.time, self.gyr_y, name="Angular Rate Y", pen=y_pen)
+                    self.graphwidget.getPlotItem().plot(
+                        self.time, self.gyr_z, name="Angular Rate Z", pen=z_pen)
+            except Exception as e:
+                print(e)
+                # sys.exit()
         app.processEvents()
 
     def getdata(self):
         packet = self.arduino_serial.readline()
         val = packet.decode('utf-8')
+        val.split("/r/n")
         if val.startswith("Ooops"):
             raise Exception()
         val = val.split(',')
