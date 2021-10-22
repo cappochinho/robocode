@@ -18,13 +18,13 @@ app = QApplication(sys.argv)
 class App(QWidget):
     def __init__(self) -> None:
         super().__init__()
-        self.acc_x = collections.deque(maxlen=10000)
-        self.acc_y = collections.deque(maxlen=10000)
-        self.acc_z = collections.deque(maxlen=10000)
-        self.gyr_x = collections.deque(maxlen=10000)
-        self.gyr_y = collections.deque(maxlen=10000)
-        self.gyr_z = collections.deque(maxlen=10000)
-        self.time = collections.deque(maxlen=10000)
+        self.acc_x = collections.deque(maxlen=1000)
+        self.acc_y = collections.deque(maxlen=1000)
+        self.acc_z = collections.deque(maxlen=1000)
+        self.gyr_x = collections.deque(maxlen=1000)
+        self.gyr_y = collections.deque(maxlen=1000)
+        self.gyr_z = collections.deque(maxlen=1000)
+        self.time = collections.deque(maxlen=1000)
 
         hboxlayout = QHBoxLayout()
         vboxlayout = QVBoxLayout()
@@ -39,11 +39,14 @@ class App(QWidget):
 
         vboxlayout.addWidget(QLabel("Select data to plot"))
 
-        self.graphwidget = pg.PlotWidget()
+        self.plotWidget = pg.PlotWidget()
         # self.graphwidget.getPlotItem().plot(title="Real Time of Accelerometer and Gyroscope data")
-        self.graphwidget.getPlotItem().setLabel("bottom", "Time", units="s")
-        self.graphwidget.getPlotItem().setLabel("left", "Acceleration", units="m/s²")
-        hboxlayout.addWidget(self.graphwidget)
+        self.plotWidget.getPlotItem().setLabel("bottom", "Time", units="s")
+        self.plotWidget.getPlotItem().setLabel("left", "Acceleration", units="m/s²")
+        self.x_curve = self.plotWidget.getPlotItem().plot()
+        self.y_curve = self.plotWidget.getPlotItem().plot()
+        self.z_curve = self.plotWidget.getPlotItem().plot()
+        hboxlayout.addWidget(self.plotWidget)
 
         self.plot_data = QComboBox(self)
         self.plot_data.addItem("Acceleration")
@@ -80,10 +83,10 @@ class App(QWidget):
         currentText = self.plot_data.currentText()
         if not self.is_plotting:
             if currentText.lower() == "Angular Rates".lower():
-                self.graphwidget.getPlotItem().setLabel("left", "Angular Rates", units="rad/s")
+                self.plotWidget.getPlotItem().setLabel("left", "Angular Rates", units="rad/s")
                 self.plot_var = "ang"
             elif currentText.lower() == "acceleration".lower():
-                self.graphwidget.getPlotItem().setLabel("left", "Acceleration", units="m/s²")
+                self.plotWidget.getPlotItem().setLabel("left", "Acceleration", units="m/s²")
                 self.plot_var = "acc"
 
     def comport_changed(self):
@@ -96,7 +99,9 @@ class App(QWidget):
 
     def plot_clicked(self):
         if self.port != None:
-            self.graphwidget.getPlotItem().clear()
+            self.x_curve.clear()
+            self.y_curve.clear()
+            self.z_curve.clear()
             self.acc_x.clear()
             self.acc_y.clear()
             self.acc_z.clear()
@@ -147,21 +152,21 @@ class App(QWidget):
                     self.acc_y.append(data["acc_y"])
                     self.acc_z.append(data["acc_z"])
 
-                    self.graphwidget.getPlotItem().plot().setData(
+                    self.x_curve.setData(
                         self.time, self.acc_x, name="Acceleration X", pen=x_pen)
-                    self.graphwidget.getPlotItem().plot().setData(
+                    self.y_curve.setData(
                         self.time, self.acc_y, name="Acceleration Y", pen=y_pen)
-                    self.graphwidget.getPlotItem().plot().setData(
+                    self.z_curve.setData(
                         self.time, self.acc_z, name="Acceleration Z", pen=z_pen)
                 elif self.plot_var == "ang":
                     self.gyr_x.append(data["gyr_x"])
                     self.gyr_y.append(data["gyr_y"])
                     self.gyr_z.append(data["gyr_z"])
-                    self.graphwidget.getPlotItem().plot(
+                    self.x_curve.setData(
                         self.time, self.gyr_x, name="Angular Rate X", pen=x_pen)
-                    self.graphwidget.getPlotItem().plot(
+                    self.y_curve.setData(
                         self.time, self.gyr_y, name="Angular Rate Y", pen=y_pen)
-                    self.graphwidget.getPlotItem().plot(
+                    self.z_curve.setData(
                         self.time, self.gyr_z, name="Angular Rate Z", pen=z_pen)
         app.processEvents()
 
@@ -169,7 +174,8 @@ class App(QWidget):
         packet = self.arduino_serial.readline()
         val = packet.decode('utf-8')
         try:
-            val: 'dict[str, float] | dict[str, str]' = json.loads(val[:val.find("}")+1])
+            val: 'dict[str, float] | dict[str, str]' = json.loads(
+                val[:val.find("}")+1])
             return val
         except json.JSONDecodeError as e:
             return {"err": "Could not decode the JSON message"}
