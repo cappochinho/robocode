@@ -29,10 +29,14 @@ void setup(void)
 void loop(void) 
 {
   /* Get a new sensor event */ 
-  sensors_event_t event; 
-  accel.getEvent(&event);
-  float ax,ay,az;
-  gyro.getAngularVelocity(&ax,&ay,&az);
+  Serial.available();
+  if (Serial.readString("Start"))
+      sensors_event_t event; 
+      accel.getEvent(&event);
+      float ax,ay,az;
+      gyro.getAngularVelocity(&ax,&ay,&az);
+  else if(Serial.readString("Stop"))
+       Serial.end
     
   /* Display the results (acceleration is measured in m/s^2) */
   Serial.print("{\"acc_x\":"); Serial.print(event.acceleration.x); Serial.print(','); Serial.print("\"acc_y\":"); Serial.print(event.acceleration.y); Serial.print(','); Serial.print("\"acc_z\":"); Serial.print(event.acceleration.z);
