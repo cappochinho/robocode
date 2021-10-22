@@ -7,6 +7,8 @@
 Adafruit_ADXL345_Unified accel = Adafruit_ADXL345_Unified(12345);
 ITG3200 gyro;
 
+char transmitting = 'N';
+
 void setup(void) 
 {
   Serial.begin(9600);
@@ -29,17 +31,25 @@ void setup(void)
 void loop(void) 
 {
   /* Get a new sensor event */ 
-  Serial.available();
-  if (Serial.readString("Start"))
-      sensors_event_t event; 
-      accel.getEvent(&event);
-      float ax,ay,az;
-      gyro.getAngularVelocity(&ax,&ay,&az);
-  else if(Serial.readString("Stop"))
-       Serial.end()
+  if (Serial.available())
+  {
+    char str = Serial.read();
+    if (str == 'Y')
+      transmitting = 'Y';
+    else if (str == 'N')
+      transmitting = 'N';
+    Serial.println(transmitting);
+  }
+  if (transmitting == 'Y')
+  {
+    sensors_event_t event; 
+    accel.getEvent(&event);
+    float ax,ay,az;
+    gyro.getAngularVelocity(&ax,&ay,&az);
     
-  /* Display the results (acceleration is measured in m/s^2) */
-  Serial.print("{\"acc_x\":"); Serial.print(event.acceleration.x); Serial.print(','); Serial.print("\"acc_y\":"); Serial.print(event.acceleration.y); Serial.print(','); Serial.print("\"acc_z\":"); Serial.print(event.acceleration.z);
-  Serial.print(','); Serial.print("\"gyr_x\":"); Serial.print(ax); Serial.print(','); Serial.print("\"gyr_y\":"); Serial.print(ay); Serial.print(','); Serial.print("\"gyr_z\":"); Serial.print(az); Serial.println('}');
-  delay(25);
+    /* Display the results (acceleration is measured in m/s^2) */
+    Serial.print("{\"acc_x\":"); Serial.print(event.acceleration.x); Serial.print(','); Serial.print("\"acc_y\":"); Serial.print(event.acceleration.y); Serial.print(','); Serial.print("\"acc_z\":"); Serial.print(event.acceleration.z);
+    Serial.print(','); Serial.print("\"gyr_x\":"); Serial.print(ax); Serial.print(','); Serial.print("\"gyr_y\":"); Serial.print(ay); Serial.print(','); Serial.print("\"gyr_z\":"); Serial.print(az); Serial.println('}');
+    delay(25);
+  }
 }
