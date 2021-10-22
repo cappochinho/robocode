@@ -15,7 +15,7 @@ void setup(void)
   if(!accel.begin())
   {
     /* There was a problem detecting the ADXL345 ... check your connections */
-    Serial.println("Ooops, no ADXL345 detected ... Check your wiring!");
+    Serial.println("{\"err\": \"Ooops, no ADXL345 detected ... Check your wiring!\"}");
     while(1);
   }
 
@@ -35,7 +35,7 @@ void loop(void)
   gyro.getAngularVelocity(&ax,&ay,&az);
     
   /* Display the results (acceleration is measured in m/s^2) */
-  Serial.print("{\"acc_x\":"); Serial.print(event.acceleration.x); Serial.print(','); Serial.print(event.acceleration.y); Serial.print(','); Serial.print(event.acceleration.z);
-  Serial.print(',');Serial.print(ax); Serial.print(','); Serial.print(ay); Serial.print(','); Serial.println(az);
+  Serial.print("{\"acc_x\":"); Serial.print(event.acceleration.x); Serial.print(','); Serial.print("\"acc_y\":"); Serial.print(event.acceleration.y); Serial.print(','); Serial.print("\"acc_z\":"); Serial.print(event.acceleration.z);
+  Serial.print(','); Serial.print("\"gyr_x\":"); Serial.print(ax); Serial.print(','); Serial.print("\"gyr_y\":"); Serial.print(ay); Serial.print(','); Serial.print("\"gyr_z\":"); Serial.print(az); Serial.println('}');
   delay(25);
 }
