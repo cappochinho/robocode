@@ -40,7 +40,6 @@ class App(QWidget):
         vboxlayout.addWidget(QLabel("Select data to plot"))
 
         self.plotWidget = pg.PlotWidget()
-        # self.graphwidget.getPlotItem().plot(title="Real Time of Accelerometer and Gyroscope data")
         self.plotWidget.getPlotItem().setLabel("bottom", "Time", units="s")
         self.plotWidget.getPlotItem().setLabel("left", "Acceleration", units="m/s²")
         self.x_curve = self.plotWidget.getPlotItem().plot()
@@ -119,6 +118,9 @@ class App(QWidget):
 
             try:
                 self.arduino_serial.open()
+                self.arduino_serial.flushOutput()
+                time.sleep(1)
+                self.arduino_serial.write(b'Y')
                 self.timer.start(1)
                 self.is_plotting = True
             except SerialException as e:
@@ -129,6 +131,7 @@ class App(QWidget):
 
     def stop(self):
         self.timer.stop()
+        self.arduino_serial.write(b'N')
         self.arduino_serial.close()
         self.is_plotting = False
         self.plot_button.setDisabled(False)
