@@ -36,7 +36,7 @@ void loop(void)
       float ax,ay,az;
       gyro.getAngularVelocity(&ax,&ay,&az);
   else if(Serial.readString("Stop"))
-       Serial.end
+       Serial.end()
     
   /* Display the results (acceleration is measured in m/s^2) */
   Serial.print("{\"acc_x\":"); Serial.print(event.acceleration.x); Serial.print(','); Serial.print("\"acc_y\":"); Serial.print(event.acceleration.y); Serial.print(','); Serial.print("\"acc_z\":"); Serial.print(event.acceleration.z);
