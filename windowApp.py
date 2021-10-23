@@ -8,14 +8,14 @@ import serial
 import serial.tools.list_ports
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import (QApplication, QComboBox, QErrorMessage,
-                             QHBoxLayout, QLabel, QPushButton, QVBoxLayout,
-                             QWidget)
+                             QHBoxLayout, QLabel, QMainWindow, QPushButton,
+                             QVBoxLayout, QWidget)
 from serial.serialutil import SerialException
 
 app = QApplication(sys.argv)
 
 
-class App(QWidget):
+class App(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.acc_x = collections.deque(maxlen=1000)
@@ -42,7 +42,8 @@ class App(QWidget):
         self.plotWidget = pg.PlotWidget()
         self.plotWidget.getPlotItem().setLabel("bottom", "Time", units="s")
         self.plotWidget.getPlotItem().setLabel("left", "Acceleration", units="m/s²")
-        self.x_curve = self.plotWidget.getPlotItem().plot()
+        self.plotWidget.getPlotItem().setTitle(title="Realtime IMU plot from Arduino")
+        self.x_curve = self.plotWidget.getPlotItem().plot(title="Just a plot")
         self.y_curve = self.plotWidget.getPlotItem().plot()
         self.z_curve = self.plotWidget.getPlotItem().plot()
         hboxlayout.addWidget(self.plotWidget)
@@ -64,14 +65,15 @@ class App(QWidget):
         vboxlayout.addWidget(self.stop_button)
 
         vboxlayout.addStretch(1)
-        self.setLayout(hboxlayout)
         self.setWindowTitle("Arduino Realtime Plotter")
 
         # QTimer
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
         self.is_plotting = False
-        # self.port = None
+        widget = QWidget()
+        self.setCentralWidget(widget)
+        widget.setLayout(hboxlayout)
 
     def list_comports(self):
         self.ports = serial.tools.list_ports.comports()
