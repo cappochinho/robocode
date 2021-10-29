@@ -55,17 +55,23 @@ void loop(void)
     float ax,ay,az;
     gyro.getAngularVelocity(&ax,&ay,&az);
 
+    //converts accelerometer values to a value in G
+    float Ax = event.acceleration.x * 0039;
+    float Ay = event.acceleration.y * 0039;
+    float Az = event.acceleration.z * 0039;
+    
     //Low Pass Filter
-    fXa = (event.acceleration.x)* alpha + (fXa * (1.0 - alpha));
-    fYa = (event.acceleration.y)* alpha + (fYa * (1.0 - alpha));
-    fZa = (event.acceleration.z)* alpha + (fZa * (1.0 - alpha));
-    fXg = ax * alpha + (fXg * (1.0 - alpha));
-    fYg = ay * alpha + (fYg * (1.0 - alpha));
-    fZg = az * alpha + (fZg * (1.0 - alpha));
+    fXa = Ax * alpha + (fXa * (1.0 - alpha));
+    fYa = Ay * alpha + (fYa * (1.0 - alpha));
+    fZa = Az * alpha + (fZa * (1.0 - alpha));
+
+    //gyroscope values to a value in degrees/sec
+    float Gx = ax / 14.375;
+    float Gy = ay / 14.375;
+    float Gz = az / 14.375;
     
     /* Display the results (acceleration is measured in m/s^2) */
     Serial.print("{\"acc_x\":"); Serial.print(fXa); Serial.print(','); Serial.print("\"acc_y\":"); Serial.print(fYa); Serial.print(','); Serial.print("\"acc_z\":"); Serial.print(fZa);
-    Serial.print(','); Serial.print("\"gyr_x\":"); Serial.print(fXg); Serial.print(','); Serial.print("\"gyr_y\":"); Serial.print(fYg); Serial.print(','); Serial.print("\"gyr_z\":"); Serial.print(fZg); Serial.println('}');
+    Serial.print(','); Serial.print("\"gyr_x\":"); Serial.print(Gx); Serial.print(','); Serial.print("\"gyr_y\":"); Serial.print(Gy); Serial.print(','); Serial.print("\"gyr_z\":"); Serial.print(Gz); Serial.println('}');
     delay(25);
   }
-}
