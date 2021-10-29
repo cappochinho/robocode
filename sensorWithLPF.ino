@@ -11,9 +11,6 @@ const float alpha = 0.5;
 double fXa = 0;
 double fYa = 0;
 double fZa = 0;
-double fXg = 0;
-double fYg = 0;
-double fZg = 0;
 
 char transmitting = 'N';
 
