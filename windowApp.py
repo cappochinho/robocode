@@ -55,6 +55,13 @@ class App(QMainWindow):
         vboxlayout.addWidget(self.plot_data)
         self.plot_var = "acc"
 
+        vboxlayout.addWidget(QLabel("Graph to Plot"))
+        self.graph_to_plot = QComboBox(self)  # type of graph to be plotted
+        self.graph_to_plot.setFixedSize(200, 20)
+        self.graph_to_plot.addItem("Line graph")
+        self.graph_to_plot.addItem("3D graph")
+        vboxlayout.addWidget(self.graph_to_plot)
+
         self.plot_button = QPushButton("Start Plot")
         self.plot_button.clicked.connect(self.plot_clicked)
         vboxlayout.addWidget(self.plot_button)
