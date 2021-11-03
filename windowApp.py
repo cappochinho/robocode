@@ -3,14 +3,14 @@ import json
 import sys
 import time
 
-import pyqtgraph as pg
 import serial
 import serial.tools.list_ports
-from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import (QApplication, QComboBox, QErrorMessage,
+from PyQt6.QtCore import QTimer
+from PyQt6.QtWidgets import (QApplication, QComboBox, QErrorMessage,
                              QHBoxLayout, QLabel, QMainWindow, QPushButton,
                              QVBoxLayout, QWidget)
 from serial.serialutil import SerialException
+import pyqtgraph as pg
 
 app = QApplication(sys.argv)
 
