@@ -58,8 +58,8 @@ class App(QMainWindow):
         vboxlayout.addWidget(QLabel("Graph to Plot"))
         self.graph_to_plot = QComboBox(self)  # type of graph to be plotted
         self.graph_to_plot.setFixedSize(200, 20)
-        self.graph_to_plot.addItem("Line graph")
-        self.graph_to_plot.addItem("3D graph")
+        self.graph_to_plot.addItem("Line Plot")
+        self.graph_to_plot.addItem("Bar Plot")
         vboxlayout.addWidget(self.graph_to_plot)
 
         self.plot_button = QPushButton("Start Plot")
