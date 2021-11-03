@@ -34,6 +34,7 @@ class App(QMainWindow):
         self.comport_combobox = QComboBox(self)
         self.comport_combobox.setFixedSize(200, 20)
         self.comport_combobox.currentTextChanged.connect(self.comport_changed)
+        self.port = None
         self.list_comports()
         vboxlayout.addWidget(self.comport_combobox)
 
@@ -107,36 +108,45 @@ class App(QMainWindow):
 
     def plot_clicked(self):
         if self.port != None:
-            self.x_curve.clear()
-            self.y_curve.clear()
-            self.z_curve.clear()
-            self.acc_x.clear()
-            self.acc_y.clear()
-            self.acc_z.clear()
-            self.gyr_x.clear()
-            self.gyr_y.clear()
-            self.gyr_z.clear()
-            self.time.clear()
+            if self.graph_to_plot.currentText().lower() == "Line Plot".lower():
+                self.line_plot()
+            else:
+                self.bar_plot()
 
-            self.plot_button.setDisabled(True)
-            self.stop_button.setDisabled(False)
-            self.arduino_serial = serial.Serial()
-            self.arduino_serial.baudrate = 9600
-            self.arduino_serial.port = self.port.device
-            self.start_time = time.time()
+    def bar_plot(self):
+        print("Bar plot")
 
-            try:
-                self.arduino_serial.open()
-                self.arduino_serial.flushOutput()
-                time.sleep(1)
-                self.arduino_serial.write(b'Y')
-                self.timer.start(1)
-                self.is_plotting = True
-            except SerialException as e:
-                self.plot_button.setDisabled(False)
-                self.stop_button.setDisabled(True)
-                self.launch_error(title="Port error",
-                                  msg="Serial Port is already open")
+    def line_plot(self):
+        self.x_curve.clear()
+        self.y_curve.clear()
+        self.z_curve.clear()
+        self.acc_x.clear()
+        self.acc_y.clear()
+        self.acc_z.clear()
+        self.gyr_x.clear()
+        self.gyr_y.clear()
+        self.gyr_z.clear()
+        self.time.clear()
+
+        self.plot_button.setDisabled(True)
+        self.stop_button.setDisabled(False)
+        self.arduino_serial = serial.Serial()
+        self.arduino_serial.baudrate = 9600
+        self.arduino_serial.port = self.port.device
+        self.start_time = time.time()
+
+        try:
+            self.arduino_serial.open()
+            self.arduino_serial.flushOutput()
+            time.sleep(1)
+            self.arduino_serial.write(b'Y')
+            self.timer.start(1)
+            self.is_plotting = True
+        except SerialException as e:
+            self.plot_button.setDisabled(False)
+            self.stop_button.setDisabled(True)
+            self.launch_error(title="Port error",
+                              msg="Serial Port is already open")
 
     def stop(self):
         self.timer.stop()
