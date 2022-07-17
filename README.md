@@ -1,2 +1,2 @@
 # robocode
-for building robots
+plotting sensor data from a robot in a 3D space
